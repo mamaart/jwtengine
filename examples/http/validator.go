@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/mamaart/jwtengine/middleware"
 	"github.com/mamaart/jwtengine/middleware/httpware"
 )
@@ -19,27 +18,21 @@ func NewValidatorService(publicKey crypto.PublicKey) (*ValidatorService, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate new validator from publicKey: %s", err)
 	}
-	router := mux.NewRouter()
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		claims, err := middleware.ContextGetClaims(r.Context())
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		if claims != nil {
-			w.Write(
-				[]byte(
-					fmt.Sprintf("Authorized... and the claims from the context is: %+v", claims),
-				),
-			)
+			fmt.Fprintf(w, "Authorized... and the claims from the context is: %+v", claims)
 		} else {
-			w.Write([]byte("Authorized... and token from context is: nil"))
+			fmt.Fprint(w, "Authorized... and token from context is: nil")
 		}
-
 	})
-	return &ValidatorService{handler: midlwr.HandleHTTP(router)}, nil
+	return &ValidatorService{handler: midlwr.HandleHTTP(mux)}, nil
 }
 
 func (s *ValidatorService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
