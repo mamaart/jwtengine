@@ -5,12 +5,13 @@ import (
 	"errors"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/mamaart/jwtengine/issuer"
 )
 
 const tokenContextKey = "token"
 
 func ContextWithClaims(ctx context.Context, token *jwt.Token) context.Context {
-	return context.WithValue(ctx, tokenContextKey, tokenToNonStandardClaimsMap(token))
+	return context.WithValue(ctx, tokenContextKey, issuer.TokenToNonStandardClaimsMap(token))
 }
 
 func ContextGetClaims(ctx context.Context) (map[string]interface{}, error) {
@@ -24,23 +25,4 @@ func ContextGetClaims(ctx context.Context) (map[string]interface{}, error) {
 		return nil, errors.New("unexpected token type in context")
 	}
 	return t, nil
-}
-
-func tokenToNonStandardClaimsMap(token *jwt.Token) map[string]interface{} {
-	myMap := make(map[string]interface{})
-	for k, v := range token.Claims.(jwt.MapClaims) {
-		if !isStandardClaim(k) {
-			myMap[k] = v
-		}
-	}
-	return myMap
-}
-
-func isStandardClaim(claim string) bool {
-	switch claim {
-	case "iss", "sub", "aud", "exp", "nbf", "iat", "jti":
-		return true
-	default:
-		return false
-	}
 }
