@@ -89,7 +89,7 @@ func (i *Issuer[C]) Refresh(refreshToken string) (tokens *models.Tokens, err err
 		return nil, fmt.Errorf("token is not valid")
 	}
 
-	claims, err := i.refreshClaimValidator.Validate(TokenToNonStandardClaimsMap(token))
+	claims, err := i.refreshClaimValidator.Validate(ExtractClaims(token))
 	if err != nil {
 		return nil, fmt.Errorf("non standard claims failed validation: %s", err)
 	}
@@ -165,7 +165,7 @@ func (i *Issuer[C]) issueRefreshToken(user string, claims C) (string, error) {
 	return tokenString, nil
 }
 
-func TokenToNonStandardClaimsMap(token *jwt.Token) map[string]interface{} {
+func ExtractClaims(token *jwt.Token) map[string]interface{} {
 	myMap := make(map[string]interface{})
 	for k, v := range token.Claims.(jwt.MapClaims) {
 		if !isStandardClaim(k) {

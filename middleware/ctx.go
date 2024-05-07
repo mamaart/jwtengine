@@ -11,7 +11,7 @@ import (
 const tokenContextKey = "token"
 
 func ContextWithClaims(ctx context.Context, token *jwt.Token) context.Context {
-	return context.WithValue(ctx, tokenContextKey, issuer.TokenToNonStandardClaimsMap(token))
+	return context.WithValue(ctx, tokenContextKey, issuer.ExtractClaims(token))
 }
 
 func ContextGetClaims(ctx context.Context) (map[string]interface{}, error) {
